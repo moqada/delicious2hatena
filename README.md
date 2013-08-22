@@ -1,2 +1,0 @@
-delicious2hatena
-================
