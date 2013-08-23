@@ -66,5 +66,6 @@ Deliciousに投稿した内容をメール経由ではてブに投稿します�
 
 crontabに設定しておくと便利です::
 
+   PYTHONIOENCODING=utf-8
    # 1時間に1回Deliciousの投稿をはてブに投稿する
    0 * * * * python /path/to/d2h.py 60
