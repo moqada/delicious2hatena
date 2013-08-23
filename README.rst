@@ -38,6 +38,13 @@ Deliciousに投稿した内容をメール経由ではてブに投稿します�
    ; はてブに送信するときの送信元アドレス
    from_addr = hatebu@example.com
 
+   ; メール送信にGmailを利用する場合
+   [gmail]
+   ; Gmailのユーザ名
+   username = gmail@example.com
+   ; Gmailのパスワード(2段階認証が有効の場合はアプリケーション固有のパスワード)
+   password = pass
+
    
 コマンド例
 ~~~~~~~~~~
