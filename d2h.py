@@ -60,6 +60,7 @@ def sendmail(from_addr, to_addr, posts, gmail_auth=None):
         posts       fetch_postsで生成した投稿リスト(辞書のリスト)
         gmail_auth  SMTPにGmailを利用する場合にユーザ名、パスワードのタプル指定
     """
+    charset = 'iso-2022-jp'
     if gmail_auth:
         s = smtplib.SMTP(GMAIL_HOST, GMAIL_PORT)
         s.ehlo()
@@ -76,8 +77,9 @@ def sendmail(from_addr, to_addr, posts, gmail_auth=None):
             body += u''.join([u'[%s]' % t for t in post['tags']])
         if post['note']:
             body += post['note']
-        msg = MIMEText(body.encode('utf-8'), 'plain', 'utf-8')
-        msg['Subject'] = post['title']
+        msg = MIMEText(
+            body.encode(charset, 'ignore'), 'plain', charset)
+        msg['Subject'] = post['title'].encode(charset, 'ignore')
         msg['From'] = from_addr
         msg['To'] = to_addr
         s.sendmail(from_addr, [to_addr], msg.as_string())
