@@ -14,6 +14,8 @@ except ImportError:
     from configparser import SafeConfigParser
 
 DELICIOUS_FEED_URL = 'https://api.del.icio.us/v1/posts/all'
+GMAIL_HOST = 'smtp.gmail.com'
+GMAIL_PORT = 587
 
 
 def fetch_posts(username, password, offset):
@@ -50,16 +52,24 @@ def fetch_posts(username, password, offset):
     return posts
 
 
-def sendmail(from_addr, to_addr, posts):
+def sendmail(from_addr, to_addr, posts, gmail_auth=None):
     """ deliciousの投稿を指定アドレスに送信する
 
         from_addr   送信元アドレス(適当なアドレス)
         to_addr     送信先アドレス(はてブで取得した投稿用アドレス)
         posts       fetch_postsで生成した投稿リスト(辞書のリスト)
+        gmail_auth  SMTPにGmailを利用する場合にユーザ名、パスワードのタプル指定
     """
-    s = smtplib.SMTP()
-    s.connect()
-    print('SMTP connected')
+    if gmail_auth:
+        s = smtplib.SMTP(GMAIL_HOST, GMAIL_PORT)
+        s.ehlo()
+        s.starttls()
+        s.login(*gmail_auth)
+        print('SMTP connected: %s' % GMAIL_HOST)
+    else:
+        s = smtplib.SMTP()
+        s.connect()
+        print('SMTP connected: localhost')
     for post in posts:
         body = post['url'] + '\n'
         if post['tags']:
@@ -97,10 +107,18 @@ def command():
     parser.add_argument(
         '--from-address', dest='mail_from_addr',
         help=u'はてブへの送信元メールアドレス')
+    parser.add_argument(
+        '--gmail-username', dest='gmail_username',
+        help=u'Gmailのユーザ名'
+    )
+    parser.add_argument(
+        '--gmail-password', dest='gmail_password',
+        help=u'Gmailのパスワード'
+    )
     ns = parser.parse_args()
     config = parse_config(ns)
-    for sec, opts in config.items():
-        for k, v in opts.items():
+    for sec in ('delicious', 'mail'):
+        for k, v in config[sec].items():
             if not v:
                 raise parser.error(
                     '%s_%s doesnot exists.' % (sec.upper(), k.upper()))
@@ -110,7 +128,16 @@ def command():
         ns.offset)
     print u'Got %s items' % len(posts)
     if posts:
-        sendmail(config['mail']['from_addr'], config['mail']['to_addr'], posts)
+        if config['gmail']['username'] and config['gmail']['password']:
+            sendmail(
+                config['mail']['from_addr'],
+                config['mail']['to_addr'], posts,
+                gmail_auth=(config['gmail']['username'],
+                            config['gmail']['password']))
+        else:
+            sendmail(
+                config['mail']['from_addr'],
+                config['mail']['to_addr'], posts)
 
 
 def parse_config(ns):
@@ -120,7 +147,8 @@ def parse_config(ns):
         filename = os.path.expanduser(ns.config)
     config = {
         'delicious': {'username': '', 'password': ''},
-        'mail': {'from_addr': '', 'to_addr': ''}
+        'mail': {'from_addr': '', 'to_addr': ''},
+        'gmail': {'username': '', 'password': ''}
     }
     parser = SafeConfigParser()
     if os.path.exists(filename):
