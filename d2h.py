@@ -49,6 +49,7 @@ def fetch_posts(username, password, offset):
             'note': post.get('extended'),
         })
         print(u'Append `%(title)s %(tags)s%(note)s`' % posts[-1])
+    posts.reverse()
     return posts
 
 
