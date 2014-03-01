@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import datetime
+import logging
 import os
 import smtplib
 import time
@@ -16,6 +17,8 @@ except ImportError:
 DELICIOUS_FEED_URL = 'https://api.del.icio.us/v1/posts/all'
 GMAIL_HOST = 'smtp.gmail.com'
 GMAIL_PORT = 587
+
+logging.basicConfig(level=logging.INFO)
 
 
 def fetch_posts(username, password, offset):
@@ -36,7 +39,7 @@ def fetch_posts(username, password, offset):
     handler = urllib2.HTTPBasicAuthHandler(manager)
     opener = urllib2.build_opener(handler)
     response = opener.open(DELICIOUS_FEED_URL, data=data)
-    print(u'Fetch %s?%s' % (DELICIOUS_FEED_URL, data))
+    logging.info(u'Fetch %s?%s' % (DELICIOUS_FEED_URL, data))
 
     # 投稿を抽出して辞書リストにする
     elem = ElementTree.parse(response)
@@ -48,7 +51,7 @@ def fetch_posts(username, password, offset):
             'tags': post.get('tag').split(),
             'note': post.get('extended'),
         })
-        print(u'Append `%(title)s %(tags)s%(note)s`' % posts[-1])
+        logging.info(u'Append `%(title)s %(tags)s%(note)s`' % posts[-1])
     posts.reverse()
     return posts
 
@@ -67,11 +70,11 @@ def sendmail(from_addr, to_addr, posts, gmail_auth=None):
         s.ehlo()
         s.starttls()
         s.login(*gmail_auth)
-        print(u'SMTP connected: %s' % GMAIL_HOST)
+        logging.info(u'SMTP connected: %s' % GMAIL_HOST)
     else:
         s = smtplib.SMTP()
         s.connect()
-        print(u'SMTP connected: localhost')
+        logging.info(u'SMTP connected: localhost')
     for post in posts:
         body = post['url'] + '\n'
         if post['tags']:
@@ -84,9 +87,9 @@ def sendmail(from_addr, to_addr, posts, gmail_auth=None):
         msg['From'] = from_addr
         msg['To'] = to_addr
         s.sendmail(from_addr, [to_addr], msg.as_string())
-        print(u'Sent `%s` to %s.' % (post['title'], to_addr))
+        logging.info(u'Sent `%s` to %s.' % (post['title'], to_addr))
     s.close()
-    print(u'SMTP closed')
+    logging.info(u'SMTP closed')
 
 
 def command():
@@ -129,7 +132,7 @@ def command():
         config['delicious']['username'],
         config['delicious']['password'],
         ns.offset)
-    print(u'Got %s items' % len(posts))
+    logging.info(u'Got %s items' % len(posts))
     if posts:
         if config['gmail']['username'] and config['gmail']['password']:
             sendmail(
