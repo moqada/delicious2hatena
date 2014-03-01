@@ -45,9 +45,11 @@ def fetch_posts(username, password, offset):
     elem = ElementTree.parse(response)
     posts = []
     for post in elem.findall('.//post'):
+        # 短縮URLなどの場合に展開する
+        url = urllib2.urlopen(post.get('href')).geturl()
         posts.append({
             'title': post.get('description'),
-            'url': post.get('href'),
+            'url': url,
             'tags': post.get('tag').split(),
             'note': post.get('extended'),
         })
