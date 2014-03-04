@@ -4,6 +4,7 @@ import datetime
 import logging
 import os
 import smtplib
+import sys
 import time
 import urllib
 import urllib2
@@ -18,7 +19,7 @@ DELICIOUS_FEED_URL = 'https://api.del.icio.us/v1/posts/all'
 GMAIL_HOST = 'smtp.gmail.com'
 GMAIL_PORT = 587
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
 def fetch_posts(username, password, offset):
